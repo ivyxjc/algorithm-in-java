@@ -1,74 +1,159 @@
-buildscript {
-    ext.kotlin_version = '1.2.40'
+plugins {
+    id 'java'
+    id 'jacoco'
+    id "org.sonarqube" version "2.6.2"
+    id 'org.jetbrains.kotlin.jvm' version '1.3.11' apply false
+    id "me.champeau.gradle.jmh" version "0.4.8" apply false
+    id "io.morethan.jmhreport" version "0.9.0" apply false
+}
+
+ext {
+    base_version = '0.0.1-SNAPSHOT'
+
+    kotlin_version = '1.3.11'
+
+    commons_lang3_version = '3.7'
+    guava_version = '27.0.1-jre'
+    h2_version = '1.4.197'
+    hibernate_version = '5.4.0.Final'
+    jmh_version = '1.21'
+    junit_version = '4.12'
+    log4j_slf4j_version = '2.11.2'
+    lombok_version = '1.18.4'
+    mockito_kotlin_version = '1.6.0'
+    mockito_version = '2.23.4'
+    slf4j_version = '1.7.25'
+    spring_boot_version = '2.1.1.RELEASE'
+    spring_kafka_version = '2.2.6.RELEASE'
+}
+
+group 'xyz.ivyxjc'
+version base_version
+
+configure(allprojects) { project ->
+    group = 'xyz.ivyxjc'
+
+    apply plugin: 'java'
+    apply plugin: 'jacoco'
+    apply plugin: 'org.jetbrains.kotlin.jvm'
+
+    sourceCompatibility = JavaVersion.VERSION_11
 
     repositories {
         mavenLocal()
         maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
         mavenCentral()
-        maven { url "https://plugins.gradle.org/m2/" }
     }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath group: 'ch.raffael.markdown-doclet', name: 'markdown-doclet', version: '1.4'
-    }
-}
 
-group 'xyz.ivyxjc'
-version '1.0-SNAPSHOT'
-
-apply plugin: 'java'
-apply plugin: 'kotlin'
-apply plugin: 'ch.raffael.markdown-doclet'
-
-sourceCompatibility = 1.8
-
-repositories {
-    mavenLocal()
-    maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
-    mavenCentral()
-    maven { url "https://plugins.gradle.org/m2/" }
-}
-//
-//configurations {
-//    all*.exclude group: 'org.jenkins-ci', module: 'jenkins'
-////    all*.exclude group: 'ch.qos.logback', module: 'logback-classic'
-////    all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
-//}
-
-
-dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.7'
-    compile group: 'com.google.guava', name: 'guava', version: '25.0-jre'
-
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    testCompile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
-
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
-
-task generateDoc(type: Javadoc) {
-    source = sourceSets.main.allJava
+    task generateDoc(type: Javadoc) {
+        source = sourceSets.main.allJava
 //    options.addStringOption('--allow-script-in-comments')
-    options.addBooleanOption('-allow-script-in-comments').value=true
-    options.header='<![CDATA[<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>]]>'
-    options.encoding='UTF-8'
-    options.doclet='ch.raffael.mddoclet.MarkdownDoclet'
+        options.addBooleanOption('-allow-script-in-comments').value = true
+        options.header = '<![CDATA[<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>]]>'
+        options.encoding = 'UTF-8'
+        options.doclet = 'ch.raffael.mddoclet.MarkdownDoclet'
+    }
+
+
+    javadoc {
+        source = sourceSets.main.allJava
+        //    options.addStringOption('--allow-script-in-comments')
+        options.addBooleanOption('-allow-script-in-comments').value = true
+        options.header = '<![CDATA[<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>]]>'
+        options.encoding = 'UTF-8'
+        options.doclet = 'ch.raffael.mddoclet.MarkdownDoclet'
+    }
+
+    buildDir = "${rootProject.projectDir.path}/build/${rootProject.name}/${project.name}"
+
+    jacoco {
+        toolVersion = "0.8.2"
+        reportsDir = file("$buildDir/customJacocoReportDir")
+    }
+
+    compileJava {
+        sourceCompatibility = JavaVersion.VERSION_11 // can be switched to 11 for testing
+        targetCompatibility = JavaVersion.VERSION_11
+        options.encoding = "UTF-8"
+    }
+
+    compileTestJava {
+        sourceCompatibility = JavaVersion.VERSION_11  // can be switched to 11 for testing
+        targetCompatibility = JavaVersion.VERSION_11
+        options.encoding = "UTF-8"
+        options.compilerArgs += "-parameters"
+    }
+
+    compileKotlin {
+        kotlinOptions {
+            jvmTarget = "1.8"
+            freeCompilerArgs = ["-Xjsr305=strict"]
+        }
+    }
+
+    compileTestKotlin {
+        kotlinOptions {
+            jvmTarget = "1.8"
+            freeCompilerArgs = ["-Xjsr305=strict"]
+        }
+    }
+
+    configurations {
+        all*.exclude group: 'ch.qos.logback', module: 'logback-core'
+        all*.exclude group: 'ch.qos.logback', module: 'logback-classic'
+        all*.exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+    }
+
+    sourceSets.main.resources.srcDirs += "${rootProject.projectDir.path}/src/main/resources"
+    sourceSets.test.resources.srcDirs += "${rootProject.projectDir.path}/src/test/resources"
+
+    dependencies {
+
+        testImplementation(group: 'junit', name: 'junit', version: junit_version) {
+            exclude group: "org.hamcrest", module: "hamcrest-core"
+        }
+        testImplementation(group: 'org.mockito', name: 'mockito-core', version: mockito_version) {
+            exclude group: "org.hamcrest", module: "hamcrest-core"
+        }
+        testImplementation(group: 'com.nhaarman', name: 'mockito-kotlin', version: mockito_kotlin_version) {
+            exclude module: "kotlin-stdlib"
+            exclude module: "kotlin-reflect"
+            exclude module: "mockito-core"
+        }
+
+        testCompile group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
+
+        testImplementation group: 'junit', name: 'junit', version: junit_version
+
+
+        //kotlin
+        implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8', version: kotlin_version
+        implementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlin_version
+        //apache
+        implementation group: 'org.apache.commons', name: 'commons-lang3', version: commons_lang3_version
+        //log
+        implementation group: 'org.slf4j', name: 'slf4j-api', version: slf4j_version
+        runtimeOnly group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: log4j_slf4j_version
+
+        //guava
+        implementation group: 'com.google.guava', name: 'guava', version: guava_version
+
+        //jsr 305
+        compileOnly group: 'org.jetbrains', name: 'annotations', version: '17.0.0'
+
+
+        /*
+         * Not to use lombok when Kotlin is used. This is determined by module
+         */
+        //lombok
+//        implementation group: 'org.projectlombok', name: 'lombok', version: lombok_version
+//        annotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombok_version
+
+    }
 }
 
-
-
-javadoc {
-    source = sourceSets.main.allJava
-    //    options.addStringOption('--allow-script-in-comments')
-    options.addBooleanOption('-allow-script-in-comments').value=true
-    options.header='<![CDATA[<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>]]>'
-    options.encoding='UTF-8'
-    options.doclet='ch.raffael.mddoclet.MarkdownDoclet'
+project('introduction-to-algorithm') {
+    dependencies {
+        implementation project(':algorithm-common')
+    }
 }

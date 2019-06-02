@@ -1,2 +1,8 @@
 rootProject.name = 'algorithm-in-java'
 
+
+include 'algorithm-common'
+include 'codeforces'
+include 'introduction-to-algorithm'
+include 'leetcode'
+
