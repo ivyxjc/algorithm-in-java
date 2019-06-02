@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration monitorinterval="3600" status="OFF">
+    <appenders>
+
+        <Console name="Console" target="SYSTEM_OUT">
+            <!--只接受程序中DEBUG级别的日志进行处理-->
+            <PatternLayout>
+                <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS z}] %-5level %c{6.} [%t] %L %M - %msg%xEx%n
+                </pattern>
+            </PatternLayout>
+            <ThresholdFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
+        </Console>
+
+        <!--处理DEBUG级别的日志，并把该日志放到logs/debug.log文件中-->
+        <!--打印出DEBUG级别日志，每次大小超过size，则这size大小的日志会自动存入按年份-月份建立的文件夹下面并进行压缩，作为存档-->
+        <RollingRandomAccessFile append="true" fileName="./logs/debug.log"
+            filePattern="logs/$${date:yyyy-MM-dd}/debug-%d{yyyy-MM-dd-HH}-%i.log.gz"
+            immediateFlush="false"
+            name="RollingFileDebug">
+            <Filters>
+                <ThresholdFilter level="DEBUG"/>
+                <ThresholdFilter level="INFO" onMatch="DENY" onMismatch="NEUTRAL"/>
+            </Filters>
+            <PatternLayout>
+                <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS z}] %-5level %c{6.} [%t] %L %M - %msg%xEx%n
+                </pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="500 MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingRandomAccessFile>
+
+        <!--处理INFO级别的日志，并把该日志放到logs/info.log文件中-->
+        <RollingRandomAccessFile append="true" fileName="./logs/info.log"
+            filePattern="logs/$${date:yyyy-MM-dd}/info-%d{yyyy-MM-dd-HH}-%i.log.gz"
+            immediateFlush="false"
+            name="RollingFileInfo">
+            <Filters>
+                <!--只接受INFO级别的日志，其余的全部拒绝处理-->
+                <ThresholdFilter level="INFO"/>
+                <ThresholdFilter level="WARN" onMatch="DENY" onMismatch="NEUTRAL"/>
+            </Filters>
+            <PatternLayout>
+                <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS z}] %-5level %c{6.} [%t] %L %M - %msg%xEx%n
+                </pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="500 MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingRandomAccessFile>
+
+        <!--处理WARN级别的日志，并把该日志放到logs/warn.log文件中-->
+        <RollingRandomAccessFile append="true" fileName="./logs/warn.log"
+            filePattern="logs/$${date:yyyy-MM-dd}/warn-%d{yyyy-MM-dd-HH}-%i.log.gz"
+            immediateFlush="false"
+            name="RollingFileWarn">
+            <Filters>
+                <ThresholdFilter level="WARN"/>
+                <ThresholdFilter level="ERROR" onMatch="DENY" onMismatch="NEUTRAL"/>
+            </Filters>
+            <PatternLayout>
+                <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS z}] %-5level %c{6.} [%t] %L %M - %msg%xEx%n
+                </pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="500 MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingRandomAccessFile>
+
+        <!--处理error级别的日志，并把该日志放到logs/error.log文件中-->
+        <RollingRandomAccessFile append="true" fileName="./logs/error.log"
+            filePattern="logs/$${date:yyyy-MM-dd}/error-%d{yyyy-MM-dd-HH}-%i.log.gz"
+            immediateFlush="false"
+            name="RollingFileError">
+            <PatternLayout>
+                <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS z}] %-5level %c{6.} [%t] %L %M - %msg%xEx%n
+                </pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="500 MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <ThresholdFilter level="ERROR"/>
+        </RollingRandomAccessFile>
+
+        <!--druid的日志记录追加器-->
+        <RollingRandomAccessFile append="true" fileName="./logs/druid-sql.log"
+            filePattern="logs/$${date:yyyy-MM-dd}/api-%d{yyyy-MM-dd-HH}-%i.log.gz"
+            immediateFlush="false"
+            name="druidSqlRollingFile">
+            <PatternLayout>
+                <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS z}] %-5level %c{6.} [%t] %L %M - %msg%xEx%n
+                </pattern>
+            </PatternLayout>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="500 MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingRandomAccessFile>
+    </appenders>
+
+    <loggers>
+        <Logger level="error" name="org.apache.catalina.startup.DigesterFactory"/>
+
+        <!--记录druid-sql的记录-->
+        <Logger level="error" name="org.apache.catalina.util.LifecycleBase"/>
+        <Logger level="warn" name="org.apache.coyote.http11.Http11NioProtocol"/>
+
+        <!--log4j2 自带过滤日志-->
+        <Logger level="warn" name="org.apache.tomcat.util.net.NioSelectorPool"/>
+        <Logger level="warn" name="org.crsh.plugin"/>
+        <Logger level="error" name="org.eclipse.jetty.util.component.AbstractLifeCycle"/>
+        <Logger level="warn" name="org.hibernate.validator.internal.util.Version"/>
+        <logger additivity="false" level="debug" name="druid.sql.Statement">
+            <appender-ref ref="druidSqlRollingFile"/>
+        </logger>
+        <logger additivity="false" level="debug" name="druid.sql.Statement">
+            <appender-ref ref="druidSqlRollingFile"/>
+        </logger>
+        <logger level="warn" name="org.apache.sshd.common.util.SecurityUtils"/>
+        <logger level="warn" name="org.crsh.ssh"/>
+        <logger level="warn"
+            name="org.springframework.boot.actuate.autoconfigure.CrshAutoConfiguration"/>
+        <logger level="warn" name="org.springframework.boot.actuate.endpoint.jmx"/>
+        <logger level="warn" name="org.thymeleaf"/>
+        <root includeLocation="false" level="DEBUG">
+            <appender-ref ref="Console"/>
+            <appender-ref ref="RollingFileInfo"/>
+            <appender-ref ref="RollingFileWarn"/>
+            <appender-ref ref="RollingFileError"/>
+            <appender-ref ref="RollingFileDebug"/>
+        </root>
+    </loggers>
+</configuration>
