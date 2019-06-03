@@ -2,6 +2,7 @@ rootProject.name = 'algorithm-in-java'
 
 
 include 'algorithm-common'
+include 'algorithm-other'
 include 'codeforces'
 include 'introduction-to-algorithm'
 include 'leetcode'
